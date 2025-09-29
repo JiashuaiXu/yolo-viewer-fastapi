@@ -64,9 +64,9 @@ yolo-viewer-fastapi/
 
 ### 前置依赖
 
-- [Python 3.9+](https://www.python.org/)
+- [Python 3.9+](https://www.python.org/)（推荐使用 [uv](https://docs.astral.sh/uv/) 管理虚拟环境与依赖）
 - [Node.js 18+](https://nodejs.org/)
-- （可选）`venv`（Python 虚拟环境）
+- [pnpm](https://pnpm.io/) 或 npm（用于安装 Vite 前端依赖）
 
 ### 启动步骤
 
@@ -92,15 +92,13 @@ chmod +x start.sh
 ```bash
 # 启动后端（终端 1）
 cd backend
-python -m venv venv
-source venv/bin/activate      # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn main:app --port 3001
+uv sync                       # 按照 pyproject.toml/requirements 解析依赖
+uv run uvicorn main:app --port 3001
 
 # 启动前端（终端 2）
 cd frontend
-npm install
-npm run dev
+pnpm install                  # 如未安装 pnpm，可使用 npm install
+pnpm run dev                  # 或：npm run dev
 ```
 
 ✅ 访问：[http://localhost:3000](http://localhost:3000)
@@ -174,6 +172,59 @@ FastAPI 自动生成交互式文档：
 - [ ] 导出为 Pascal VOC / COCO JSON
 - [ ] 添加搜索/分页功能
 - [ ] Docker 部署支持
+
+---
+
+## 🔄 CI/CD 与自动化测试
+
+本项目推荐使用 GitHub Actions 进行持续集成与自动化测试。以下为一个示例工作流，展示如何使用 uv 同步依赖并运行后端单元测试，同时安装前端依赖执行构建与测试：
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v1
+      - name: Install dependencies
+        run: uv sync
+        working-directory: backend
+      - name: Run backend tests
+        run: uv run pytest
+        working-directory: backend
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: frontend
+      - name: Run build & tests
+        run: |
+          pnpm run build
+          pnpm run test -- --watch=false
+        working-directory: frontend
+```
+
+> 💡 根据实际项目结构调整 `working-directory` 及测试命令；如使用 npm，可将相关命令替换为 `npm install`、`npm run build`、`npm test`。
 
 ---
 
