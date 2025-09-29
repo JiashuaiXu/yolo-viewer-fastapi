@@ -1,4 +1,3 @@
----
 
 # 🧠 YOLO Viewer — FastAPI + React
 
