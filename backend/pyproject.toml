@@ -5,10 +5,7 @@ description = "FastAPI backend for the YOLO annotation viewer"
 authors = [{ name = "YOLO Viewer Maintainers" }]
 readme = "../README.md"
 requires-python = ">=3.9"
-dependencies = [
-    "fastapi>=0.110,<0.112",
-    "uvicorn[standard]>=0.24,<0.30",
-]
+dependencies = []
 
 [project.optional-dependencies]
 dev = [
